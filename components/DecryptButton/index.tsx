@@ -34,13 +34,13 @@ export default function DecryptButton({ children }: { children?: (openModal: () 
         return;
       }
       setIsDecrypting(true);
-      setStatusText("Decrypting...");
+      setStatusText("Fetching from arweave...");
       const fileBuffer = await fetchFile(arweaveId);
       if (!fileBuffer) {
         throw new Error("File not found");
       }
       const data = decode.decode(fileBuffer);
-      console.log("data", data);
+      console.log("Decoded data:", data);
       const { ciphertext, dataToEncryptHash, condition } = JSON.parse(data);
       if (!ciphertext || !dataToEncryptHash) {
         throw new Error("Invalid file format");

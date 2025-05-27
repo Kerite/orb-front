@@ -4,7 +4,7 @@ import { AccsDefaultParams } from "@lit-protocol/types";
 import { properties } from "@lit-protocol/accs-schemas/schemas/LPACC_EVM_BASIC"
 import styled from "styled-components";
 import { Dispatch } from "react";
-import { DEFAULT_CONDITION } from "@/utils/constants";
+import { AvailableChains, DEFAULT_CONDITION } from "@/lib/constants";
 import { ethers } from "ethers";
 
 const Container = styled.div`
@@ -77,7 +77,7 @@ const ChainSelect = ({ condition, updateCondition }: {
     <Select label="Chain" defaultSelectedKeys={[condition.chain]} onChange={(e) => {
       updateCondition({ ...condition, chain: e.target.value as AccsDefaultParams["chain"] });
     }}>
-      {["sepolia"].map(chain => (
+      {AvailableChains.map(chain => (
         <SelectItem key={chain} textValue={chain}>{chain}</SelectItem>
       ))}
     </Select>

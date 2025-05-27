@@ -7,7 +7,7 @@ import {
 import { AccessControlCondition } from '@/types';
 import { isConditionsGroup, isNormalCondition, isOperatorCondition } from '@/utils/type-checker';
 import { Button, ButtonGroup } from '@heroui/button';
-import { DEFAULT_CONDITION } from '@/utils/constants';
+import { DEFAULT_CONDITION } from '@/lib/constants';
 import NormalCondition from './normal-condition';
 
 const OPERATOR_OPTIONS = [

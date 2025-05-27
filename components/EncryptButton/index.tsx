@@ -15,7 +15,7 @@ import { useArweave } from "@/contexts/arweaveContext";
 import { useLitProtocol } from "@/contexts/litProtocolContext";
 import { addToast, Divider, Input } from "@heroui/react";
 import { useEthers } from "@/contexts/ethersContext";
-import { DEFAULT_CONDITION } from "@/utils/constants";
+import { DEFAULT_CONDITION } from "@/lib/constants";
 
 interface UploadButtonProps {
   onUploadFinished?: (arweaveTransId: string) => void;
@@ -47,7 +47,7 @@ const EncryptButton: React.FC<UploadButtonProps> = ({ onUploadFinished, children
         throw new Error("No file selected");
       }
 
-      console.log("conditions", condition);
+      console.log("Uploading using conditions", condition);
 
       const { ciphertext, dataToEncryptHash } = await encryptFile({ file, condition });
 

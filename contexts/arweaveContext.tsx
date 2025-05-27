@@ -1,6 +1,6 @@
 "use client";
 import { useArweaveMapping } from "@/hooks/use-arweave-mapping";
-import { errorFunction } from "@/utils/constants";
+import { errorFunction } from "@/lib/constants";
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import {

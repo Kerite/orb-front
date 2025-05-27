@@ -2,7 +2,7 @@
 import { ethers } from "ethers";
 import { createContext, useCallback, useContext, useEffect, useReducer, useState } from "react";
 import { addToast } from "@heroui/react";
-import { errorFunction, networks } from "@/utils/constants";
+import { errorFunction, networks } from "@/lib/constants";
 
 interface EthersState {
   currentNetworkId?: string;

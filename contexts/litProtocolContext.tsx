@@ -1,5 +1,4 @@
 "use client";
-import { LPACC_EVM_BASIC } from "@lit-protocol/accs-schemas";
 import { createSiweMessageWithRecaps, generateAuthSig, LitAccessControlConditionResource, LitActionResource } from "@lit-protocol/auth-helpers";
 import { LIT_ABILITY, LIT_NETWORK } from "@lit-protocol/constants";
 import { LitContracts } from "@lit-protocol/contracts-sdk";
@@ -8,6 +7,7 @@ import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { AccessControlConditions, EncryptResponse, LIT_NETWORKS_KEYS, LitResourceAbilityRequest } from "@lit-protocol/types";
 import { createContext, useCallback, useContext, useEffect, useReducer, useState } from "react";
 import { useEthers } from "./ethersContext";
+import { getSingleChainFromCondition } from "@/lib/utils";
 
 interface LitProtocolProviderState {
   status: "disconnected" | "connecting" | "connected";
@@ -71,23 +71,6 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
   const [litNodeClient, setLitNodeClient] = useState<LitNodeClient>(() => new LitNodeClient({ litNetwork }));
   const { requireProvider, requireNetwork } = useEthers();
   const [state, dispatch] = useReducer(litProtocolStateReducer, initialState);
-  // const initialized = useRef(false);
-  const [usedBlockchain] = useState<LPACC_EVM_BASIC["chain"]>("sepolia");
-
-  // useEffect(() => {
-  //   if (initialized.current) return;
-  //   initialized.current = true;
-  //   (async () => {
-  //     try {
-  //       dispatch({ type: "CONNECTING" });
-  //       await litNodeClient.connect();
-  //       dispatch({ type: "CONNECTED" });
-  //     } catch (error) {
-  //       console.error("Lit client connect error:", error);
-  //       dispatch({ type: "DISCONNECTED" });
-  //     }
-  //   })();
-  // }, [litNodeClient]);
 
   useEffect(() => {
     const newClient = new LitNodeClient({
@@ -119,12 +102,13 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
   const encryptFile = useCallback<LitProtocolContext["encryptFile"]>(async (params: EncryptFileParams) => {
     const { file, condition, onProcess } = params;
     try {
+      const chain = getSingleChainFromCondition(condition);
       onProcess?.("Connecting to Lit Node Client...");
       await litNodeClient.connect();
       onProcess?.("Encrypting file...");
       console.log("Encrypting using condition:", condition);
       const res = await litEncryptFile({
-        chain: usedBlockchain,
+        chain,
         file,
         accessControlConditions: condition,
       }, litNodeClient);
@@ -134,9 +118,16 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
       console.error("Error encrypting file:", error);
       throw error;
     }
-  }, [litNodeClient, usedBlockchain]);
+  }, [litNodeClient]);
 
-  const getSessionSignatures = useCallback(async (condition: AccessControlConditions, onProcess?: (_: string) => void) => {
+  const getSessionSignatures = useCallback(async ({
+    condition,
+    onProcess
+  }: {
+    condition: AccessControlConditions,
+    onProcess?: (_: string) => void
+  }) => {
+    const chain = getSingleChainFromCondition(condition);
     const provider = await requireProvider();
     // Connect to the wallet
     await requireNetwork("litTestnet");
@@ -152,7 +143,7 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
     console.log("Latest blockhash:", latestBlockhash);
 
     const contractClient = new LitContracts({
-      signer: provider.getSigner(),
+      signer,
       network: LIT_NETWORK.DatilDev,
     });
     onProcess?.("Connecting to Lit contract client...");
@@ -178,7 +169,7 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
     onProcess?.("Getting session signatures...");
     // Get the session signatures
     const sessionSigs = await litNodeClient.getSessionSigs({
-      chain: usedBlockchain,
+      chain,
       resourceAbilityRequests: [
         {
           resource: new LitActionResource('*'),
@@ -210,7 +201,7 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
 
         // Generate the authSig
         const authSig = await generateAuthSig({
-          signer: signer,
+          signer,
           toSign,
         });
 
@@ -219,25 +210,30 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
       capacityDelegationAuthSig,
     });
     return sessionSigs;
-  }, [litNodeClient, usedBlockchain, requireProvider, requireNetwork]);
+  }, [litNodeClient, requireProvider, requireNetwork]);
 
   const decryptFile = useCallback<LitProtocolContext["decryptFile"]>(async (data: DecryptFileParams): Promise<Blob> => {
     try {
       const { ciphertext, dataToEncryptHash, condition, onProcess } = data;
+      const chain = getSingleChainFromCondition(condition);
       if (!ciphertext || !dataToEncryptHash) {
         throw new Error("Invalid data format");
       }
       onProcess?.("Connecting to Lit Node Client...");
       litNodeClient.connect();
       onProcess?.("Decrypting...");
+      console.log("Decrypting using chain:", chain);
       console.log("Decrypting using condition:", condition);
-      const sessionSigs = await getSessionSignatures(condition, onProcess);
+      const sessionSigs = await getSessionSignatures({
+        condition,
+        onProcess
+      });
       if (!sessionSigs) {
         throw new Error("Genearte Session signatures failed");
       }
       const { decryptedData } = await litNodeClient.decrypt({
         accessControlConditions: condition,
-        chain: usedBlockchain,
+        chain,
         ciphertext,
         dataToEncryptHash,
         sessionSigs,
@@ -247,7 +243,7 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
     } finally {
       // disconnectWeb3();
     }
-  }, [getSessionSignatures, litNodeClient, usedBlockchain]);
+  }, [getSessionSignatures, litNodeClient]);
 
   return (
     <LitProtocolContext.Provider value={{

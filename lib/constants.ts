@@ -48,3 +48,10 @@ export const networks: Record<"bscTestnet" | "litTestnet", {
     blockExplorerUrls: ["https://yellowstone-explorer.litprotocol.com"]
   }
 }
+
+export const AvailableChains = [
+  "sepolia",
+  "bsc",
+] as const;
+
+export type LitChain = (typeof AvailableChains)[number];
