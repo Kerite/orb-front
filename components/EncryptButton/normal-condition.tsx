@@ -74,16 +74,21 @@ const ChainSelect = ({ condition, updateCondition }: {
   updateCondition: Dispatch<Readonly<AccsDefaultParams>>
 }) => {
   return (
-    <Select label="Chain" defaultSelectedKeys={[condition.chain]} onChange={(e) => {
-      updateCondition({ ...condition, chain: e.target.value as AccsDefaultParams["chain"] });
-    }}>
+    <Select label="Chain"
+      selectedKeys={new Set([condition.chain])}
+      defaultSelectedKeys={[condition.chain]}
+      onChange={(e) => {
+        console.log("Selected chain:", e.target.value);
+        if (e.target.value) {
+          updateCondition({ ...condition, chain: e.target.value as AccsDefaultParams["chain"] });
+        }
+      }}>
       {["sepolia"].map(chain => (
         <SelectItem key={chain} textValue={chain}>{chain}</SelectItem>
       ))}
     </Select>
   )
 }
-
 
 export default function NormalCondition({ condition, updateCondition }: {
   condition: Readonly<AccsDefaultParams>,

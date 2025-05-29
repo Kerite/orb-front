@@ -1,6 +1,6 @@
 "use client";
 import styles from "./memorie-card.module.css";
-import { OrbButton, OrbButtonMiddle, OrbButtonSmall } from "@/utils/styled";
+import { OrbButtonMiddle } from "@/utils/styled";
 import { useState } from "react";
 import { useLitProtocol } from "@/contexts/litProtocolContext";
 import { addToast, Tooltip } from "@heroui/react";

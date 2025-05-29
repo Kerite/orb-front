@@ -30,10 +30,8 @@ const EncryptButton: React.FC<UploadButtonProps> = ({ onUploadFinished, children
   const [price, setPrice] = useState<string>("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { connectStatus } = useEthers();
-  const { addMemoryMapping, uploadFile } = useArweave();
+  const { addMemoryMapping } = useArweave();
   const { encryptFile } = useLitProtocol();
-
-  const encoder = new TextEncoder();
 
   const handleUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -51,26 +49,32 @@ const EncryptButton: React.FC<UploadButtonProps> = ({ onUploadFinished, children
 
       const { ciphertext, dataToEncryptHash } = await encryptFile({ file, condition });
 
-      // Upload to arweave
-      const uint8Array = encoder.encode(
-        JSON.stringify({
+      const resp = await fetch("/api/upload", {
+        method: "POST",
+        body: JSON.stringify({
           ciphertext,
           dataToEncryptHash,
-          condition: condition,
+          condition,
           originalFileName: file.name,
         })
-      );
+      });
+
+      const result: {
+        transactionId?: string;
+      } = await resp.json();
+
       setStatusMessage("Uploading...");
-      const arweaveTransId = await uploadFile(uint8Array.buffer as ArrayBuffer);
-      if (arweaveTransId) {
-        setStatusMessage(`Uploaded arweave id: ${arweaveTransId}, sharing...`);
+      console.log("Uploaded file to Arweave...", resp);
+
+      if (result.transactionId) {
         await addMemoryMapping({
-          memoryId: arweaveTransId,
-          price: price,
-          description: description,
+          memoryId: result.transactionId,
+          price,
+          description
         });
         addToast({ color: "success", title: "Share successfully" });
-        onUploadFinished?.(arweaveTransId);
+        onUploadFinished?.(result.transactionId);
+        setStatusMessage("Upload successful");
       } else {
         throw new Error("Upload result is empty");
       }
