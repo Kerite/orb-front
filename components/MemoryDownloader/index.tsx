@@ -19,12 +19,13 @@ export default function MemoryDownloader() {
       setIsDownloading(false);
     }
   };
+
   return (
     <OrbButtonSmall
       onClick={handleDownload}
       disabled={isDownloading}
     >
-      {isDownloading ? "保存中" : "保存记忆"}
+      {isDownloading ? "Downloading..." : "Download Memory"}
     </OrbButtonSmall>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 import { useChat } from "@/contexts/chatContext";
 import { useCallback, useEffect, useRef, useState } from "react";
-import styled, { keyframes } from "styled-components"
+import styled, { keyframes } from "styled-components";
 import { MessageInput } from "../ChatInput";
+import QuickMessages from "../QuickMessages";
 
 const DialogBox = styled.div`
   width: 80%;
@@ -24,9 +25,9 @@ const ChatArea = styled.div`
   padding: 1rem;
   background-color: rgba(255, 255, 255, 0.02);
   border-radius: 10px;
-  margin-bottom: 1rem;
   text-align: left;
   gap: 0.5rem;
+  scrollbar-color: #00000040 #0000;
 `
 
 const Message = styled.p`
@@ -81,7 +82,7 @@ export default function ChatBox() {
   }, [reply]);
 
   return (
-    <DialogBox>
+    <DialogBox className="flex flex-col gap-2">
       <ChatArea>
         {records.map((record, index) => (
           <Message key={index}>
@@ -95,6 +96,7 @@ export default function ChatBox() {
         )}
         <div ref={messageEndRef}></div>
       </ChatArea>
+      <QuickMessages handleChat={handleChat} />
       <MessageInput onSend={handleChat} />
     </DialogBox>
   )

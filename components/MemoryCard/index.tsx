@@ -53,16 +53,16 @@ export default function MemoryCard({ data }: { data: ArweaveMappingValue }) {
 
   return (
     <div className={styles.memoryCard}>
-      <div className="flex justify-between items-start flex-wrap">
+      <div className="flex flex-wrap items-start justify-between">
         <div className={styles.titleRow}>
           <Tooltip content={data.address} placement="top-start">
-            <div className="mb-2 text-2xl text-[#5dbae4] select-none cursor-pointer font-bold underline" onClick={() => router.push(`/creators/${data.address}`)}>
+            <div className="mb-2 cursor-pointer select-none text-2xl font-bold text-[#5dbae4] underline" onClick={() => router.push(`/creators/${data.address}`)}>
               {data.address.substring(0, 6)}...{data.address.substring(data.address.length - 4)}
             </div>
           </Tooltip>
           <div className={styles.balanceRequirement}>💰 下载条件: {data.price}</div>
         </div>
-        <div className="flex gap-4 mt-2">
+        <div className="mt-2 flex gap-4">
           <OrbButtonMiddle>Follow</OrbButtonMiddle>
           <OrbButtonMiddle onClick={handleDownload}>{isDecrypting ? status : "Download"}</OrbButtonMiddle>
         </div>

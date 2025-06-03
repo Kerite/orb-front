@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
-import { FlexDiv } from "@/utils/styled";
-import styled from "styled-components";
 import { useChat } from "@/contexts/chatContext";
+import { FlexDiv, OrbButton } from "@/utils/styled";
+import { useState } from "react";
+import styled from "styled-components";
 
 export interface MessageInputProps {
   onSend?: (message: string) => Promise<void>;
@@ -16,23 +16,16 @@ const ChatMessageInput = styled.input`
   background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-color);
   font-size: 1rem;
-`
+`;
 
-const ChatButton = styled.button`
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--accent-color);
-  color: var(--text-color);
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: 0.3s;
-
-  &:hover {
-    background-color: var(--accent-color);
-    color: #0A0F1A;
+const ChatButton = styled(OrbButton)`
+  && {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--accent-color);
+    backdrop-filter: blur(4px);
   }
-`
+`;
 
 export function MessageInput({ onSend }: MessageInputProps) {
   const [message, setMessage] = useState("");
@@ -41,6 +34,7 @@ export function MessageInput({ onSend }: MessageInputProps) {
   const handleSendMessage = async (message: string) => {
     if (message.trim() === "") return;
     if (onSend) {
+      setMessage("");
       await onSend(message);
     }
   }
@@ -54,10 +48,11 @@ export function MessageInput({ onSend }: MessageInputProps) {
         onKeyDown={async (e) => {
           if (e.keyCode === 13) {
             handleSendMessage(message);
-            setMessage("");
           }
-        }} value={message} onChange={(e) => setMessage(e.target.value)} />
-      <ChatButton onClick={() => handleSendMessage(message)}>📤</ChatButton>
+        }}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)} />
+      <ChatButton disabled={isChating} onClick={() => handleSendMessage(message)}>📤</ChatButton>
     </FlexDiv>
   )
 }

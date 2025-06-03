@@ -1,8 +1,8 @@
 "use client";
+import ChatBox from "@/components/ChatBox";
 import OperationGroup from "@/components/OperationGroup";
-import ChatBox from "@/components/ChatBox/chat-box";
-import styled from "styled-components";
 import { Title } from "@/utils/styled";
+import styled from "styled-components";
 
 const Container = styled.div`
   max-width: 1000px;

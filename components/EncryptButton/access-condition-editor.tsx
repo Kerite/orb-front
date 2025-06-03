@@ -118,7 +118,7 @@ const AccessControlConditionsEditor: React.FC<AccessControlConditionsEditorProps
 
   const renderConditionGroup = (group: AccessControlConditions, path: number[] = []) => {
     return (
-      <div className="condition-group" style={{
+      <div style={{
         border: '1px solid #ccc',
         borderRadius: '4px',
         padding: '10px',
@@ -133,7 +133,7 @@ const AccessControlConditionsEditor: React.FC<AccessControlConditionsEditorProps
 
             if (isOperatorCondition(item)) {
               return (
-                <div key={index} className="operator" style={{ margin: '8px 0' }}>
+                <div key={index} style={{ margin: '8px 0' }}>
                   <select
                     value={item.operator}
                     onChange={(e) => updateItem(currentPath, { operator: e.target.value })}

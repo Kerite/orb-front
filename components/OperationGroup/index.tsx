@@ -7,11 +7,11 @@ import MemoryUploader from "../MemoryUploader";
 
 export default function OperationGroup({ className }: { className?: string }) {
   return (
-    <div className={`${className} flex gap-6 justify-center flex-col-reverse sm:flex-row`}>
+    <div className={`${className} flex flex-col-reverse justify-center gap-6 sm:flex-row`}>
       <EncryptButton onUploadFinished={(id) => addToast({ color: "success", title: "Upload success", description: `Arweave TX ID: ${id}` })}>
         {(onOpen) => (
           <OrbButtonSmall onClick={onOpen}>
-            分享记忆
+            Share Memory
           </OrbButtonSmall>
         )}
       </EncryptButton>

@@ -54,13 +54,6 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider>();
   const [state, dispatch] = useReducer(ethersReducer, initialState);
 
-  useEffect(() => {
-    console.log("Initializing Ethers provider...");
-    if (window.ethereum) {
-      setProvider(new ethers.providers.Web3Provider(window.ethereum, 'any'));
-    }
-  }, []);
-
   const requireProvider = useCallback(
     async () => {
       if (state.connectStatus === "connecting") {
@@ -78,10 +71,12 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
       }
       const accounts = await usedProvider.send("eth_requestAccounts", []);
       console.log("Web3 Accounts:", accounts);
+      localStorage.setItem("WALLET_CONNECTED", "true");
       dispatch({ action: "WALLET_CONNECTED", address: accounts[0] });
       return usedProvider;
     },
-    [provider, state.connectStatus],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [provider],
   );
 
   const requireNetwork = useCallback(async (chainKey: keyof typeof networks) => {
@@ -104,6 +99,20 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
   }, [provider]);
+
+  useEffect(() => {
+    console.log("Initializing Ethers provider...");
+    if (window.ethereum) {
+      setProvider(new ethers.providers.Web3Provider(window.ethereum, 'any'));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("WALLET_CONNECTED") === "true") {
+      requireProvider()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <ethersContext.Provider value={{

@@ -11,13 +11,13 @@ interface LastSendMessageBoxProps {
   className?: string;
 }
 
-const MessageRecords: React.FC<LastSendMessageBoxProps> = ({
+const ChatRecord: React.FC<LastSendMessageBoxProps> = ({
   message,
   className,
 }: LastSendMessageBoxProps) => {
   return (
-    <div className={`flex flex-col w-full justify-end space-y-[20px] ${className}`}>
-      <div className="flex ml-auto gap-2">
+    <div className={`flex w-full flex-col justify-end space-y-[20px] ${className}`}>
+      <div className="ml-auto flex gap-2">
         <EncryptButton onUploadFinished={(id) => addToast({ color: "success", title: "Upload success", description: `Arweave TX ID: ${id}` })}>
           {(onOpen) => (
             <OrbButton onClick={onOpen}>
@@ -36,14 +36,14 @@ const MessageRecords: React.FC<LastSendMessageBoxProps> = ({
         <MemoryDownloader></MemoryDownloader>
       </div>
       <div
-        className="w-full p-[40px] rounded-[15px]"
+        className="w-full rounded-[15px] p-[40px]"
         style={{
           background:
             "linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%)",
         }}
       >
         <span
-          className="font-bold text-[26px]"
+          className="text-[26px] font-bold"
           style={{
             letterSpacing: "0em",
           }}
@@ -55,4 +55,4 @@ const MessageRecords: React.FC<LastSendMessageBoxProps> = ({
   );
 }
 
-export default MessageRecords;
+export default ChatRecord;

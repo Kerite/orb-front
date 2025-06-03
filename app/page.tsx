@@ -31,7 +31,7 @@ export default function HomePage() {
     <div className="text-[#D3F4FF]">
       <Container className="overflow-x-hidden">
         <Title>Memory-ORB</Title>
-        <Subtitle>连接神经云，唤醒你的多维记忆节点</Subtitle>
+        <Subtitle>Connect to the neural network and awaken your multi-dimensional memory nodes</Subtitle>
         <div className="flex flex-col gap-4 sm:flex-row">
           <Link href="/chat">
             <OrbButton>Build Memory</OrbButton>

@@ -71,10 +71,10 @@ export default function DecryptButton({ children }: { children?: (openModal: () 
     <>
       {children?.(onOpen) || (
         <button
-          className="w-[122px] h-[34px] rounded-[50px] bg-[rgba(255,255,255,0.7)]"
+          className="h-[34px] w-[122px] rounded-[50px] bg-[rgba(255,255,255,0.7)]"
           onClick={onOpen}
         >
-          <span className="font-normal text-[#666666] text-[16px]">Download</span>
+          <span className="text-[16px] font-normal text-[#666666]">Download</span>
         </button>
       )}
       <Modal isOpen={isOpen} onClose={onClose} isDismissable={false}>

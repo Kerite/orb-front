@@ -12,7 +12,7 @@ export function ReplyMessageBox({ reply, className = "" }: ReplyMessageBoxProps)
     <div className={`${className}`}>
       <div
         id="reply-bubble"
-        className="relative min-h-48 rounded-[20px] border-[#A55D4F] border-[2px] p-[20px] bg-[#FDF1EA] mt-[50px]"
+        className="relative mt-[50px] min-h-48 rounded-[20px] border-2 border-[#A55D4F] bg-[#FDF1EA] p-[20px]"
       >
         <div id="name-tag" className="absolute" />
         <div>{reply.content}</div>

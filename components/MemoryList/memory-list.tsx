@@ -27,11 +27,11 @@ export default function MemoryList({ title, address }: Readonly<{ title?: string
   }, [getLatestMemories, getUserMemories, address]);
 
   return (
-    <div className="px-8 py-16 m-auto max-w-[1000px]">
+    <div className="m-auto max-w-[1000px] px-8 py-16">
       <Title>Explore Memories</Title>
 
       {loading ? (
-        <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="flex min-h-[50vh] items-center justify-center">
           <Spinner />
         </div>
       ) : memoryList.length > 0 ? (
@@ -41,7 +41,7 @@ export default function MemoryList({ title, address }: Readonly<{ title?: string
           ))}
         </>
       ) : (
-        <div className="text-center px-12 text-xl">
+        <div className="px-12 text-center text-xl">
           <p>No Memory Data</p>
         </div>
       )}

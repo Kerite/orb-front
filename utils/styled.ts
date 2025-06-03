@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 
 export const RecordsButton = styled.button`
   border-radius: 50px;
@@ -10,42 +10,31 @@ export const FlexDiv = styled.div`
   display: flex;
 `;
 
-export const OrbButton = styled.button`
-  padding: 18px 36px;
+export const OrbButton = styled.button<{ $noGlow?: boolean }>`
+  padding: 1.125rem 2.25rem;
   font-size: 1rem;
-  border: 1.5px solid var(--accent-color);
   border-radius: 30px;
   background-color: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(10px);
-  box-shadow: 0 0 12px var(--glow-color);
   color: var(--text-color);
   cursor: pointer;
   transition: all 0.3s ease, transform 0.2s ease;
+  ${(props) => !props.$noGlow && css`
+    box-shadow: 0 0 12px var(--glow-color);
+    border: 1.5px solid var(--accent-color);
+  `}
 
-  &:hover {
-    background-color: var(--accent-color);
-    color: #0A0F1A;
-    box-shadow: 0 0 25px var(--glow-color);
-    scale: 1.05;
+  &:disabled {
+    cursor: not-allowed;
   }
-`
 
-export const OrbButtonMiddle = styled.button`
-  padding: 14px 25px;
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1.5px solid var(--accent-color);
-  color: var(--text-color);
-  font-size: 0.95rem;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 0 12px var(--glow-color);
-
-  &:hover {
+  &:hover:not([disabled]) {
     background-color: var(--accent-color);
     color: #0A0F1A;
-    box-shadow: 0 0 25px var(--glow-color);
+    ${(props) => !props.$noGlow && css`
+      box-shadow: 0 0 25px var(--glow-color);
+    `}
+    scale: 1.05;
   }
 
   @media (max-width: 768px) {
@@ -54,26 +43,23 @@ export const OrbButtonMiddle = styled.button`
   }
 `
 
-export const OrbButtonSmall = styled.button`
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1.5px solid var(--accent-color);
-  color: var(--text-color);
-  padding: 10px 20px;
-  font-size: 0.95rem;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 0 12px var(--glow-color);
-
-  &:hover {
-    background-color: var(--accent-color);
-    color: #0A0F1A;
-    box-shadow: 0 0 25px var(--glow-color);
+export const OrbButtonMiddle = styled(OrbButton)`
+  && {
+    padding: 14px 25px;
+    font-size: 0.95rem;
   }
+`
 
-  @media (max-width: 768px) {
-    padding: 10px 15px;
+export const OrbButtonSmall = styled(OrbButton)`
+  && {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.95rem;
+  }
+`
+
+export const OrbButtonTiny = styled(OrbButton)`
+  && {
+    padding: 0.25rem 0.5rem;
     font-size: 0.85rem;
   }
 `
