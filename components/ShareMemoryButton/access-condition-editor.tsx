@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { AccessControlCondition } from '@/types';
+import { DEFAULT_CONDITION } from '@/utils/constants';
+import { isConditionsGroup, isNormalCondition, isOperatorCondition } from '@/utils/type-checker';
+import { Button, ButtonGroup } from '@heroui/button';
 import {
   AccessControlConditions,
   AccsDefaultParams,
   AccsOperatorParams,
 } from '@lit-protocol/types';
-import { AccessControlCondition } from '@/types';
-import { isConditionsGroup, isNormalCondition, isOperatorCondition } from '@/utils/type-checker';
-import { Button, ButtonGroup } from '@heroui/button';
-import { DEFAULT_CONDITION } from '@/utils/constants';
+import React, { useEffect, useState } from 'react';
 import NormalCondition from './normal-condition';
 
 const OPERATOR_OPTIONS = [
@@ -187,7 +187,7 @@ const AccessControlConditionsEditor: React.FC<AccessControlConditionsEditorProps
 
   return (
     <div>
-      <h3>Access Control Conditions</h3>
+      <h3 className='select-none'>Access Control Conditions</h3>
       {conditions.length === 0 ? (
         <div>
           <p>No condition set.</p>
@@ -204,7 +204,7 @@ const AccessControlConditionsEditor: React.FC<AccessControlConditionsEditorProps
       )}
 
       <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
-        <h4>Current conditions JSON:</h4>
+        <h4 className='select-none'>Current conditions JSON:</h4>
         <pre style={{ overflow: 'auto', maxHeight: '200px' }}>
           {JSON.stringify(conditions, null, 2)}
         </pre>

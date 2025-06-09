@@ -1,9 +1,9 @@
 "use client";
 import { OrbButtonSmall } from "@/utils/styled";
 import { addToast } from "@heroui/react";
-import EncryptButton from "../EncryptButton";
 import MemoryDownloader from "../MemoryDownloader";
 import MemoryUploader from "../MemoryUploader";
+import EncryptButton from "../ShareMemoryButton";
 
 export default function OperationGroup({ className }: { className?: string }) {
   return (

@@ -1,8 +1,8 @@
 "use client";
-import { useEthers } from "@/contexts/ethersContext";
+import { abi as MemoryMappingAbi } from "@/artifacts/contracts/MemoryMapping.sol/MemoryMapping.json";
+import { useEthers } from "@/hooks/use-ethers";
 import { BigNumber, ethers } from "ethers";
 import { useCallback, useState } from "react";
-import { abi as MemoryMappingAbi } from "@/artifacts/contracts/MemoryMapping.sol/MemoryMapping.json";
 
 export interface ArweaveMappingValue {
   address: string;
@@ -48,7 +48,10 @@ export const useArweaveMapping = () => {
     await requireNetwork("bscTestnet");
     const signer = ethProvider.getSigner();
     const contractWithSigner = memoryMappingContract.connect(signer);
-    return await contractWithSigner.addMemory(arweaveId, description, price);
+    console.log("Calling contract addMemory");
+    const resp = await contractWithSigner.addMemory(arweaveId, description, price);
+    console.log("addMemory transaction result:", resp);
+    return resp;
   }, [memoryMappingContract, requireProvider, requireNetwork]);
 
   return {

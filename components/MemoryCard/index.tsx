@@ -1,12 +1,12 @@
 "use client";
-import styles from "./memorie-card.module.css";
-import { OrbButtonMiddle } from "@/utils/styled";
-import { useState } from "react";
 import { useLitProtocol } from "@/contexts/litProtocolContext";
-import { addToast, Tooltip } from "@heroui/react";
 import { ArweaveMappingValue } from "@/hooks/use-arweave-mapping";
-import { useEthers } from "@/contexts/ethersContext";
+import { useEthers } from "@/hooks/use-ethers";
+import { OrbButtonMiddle } from "@/utils/styled";
+import { addToast, Tooltip } from "@heroui/react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { BalanceRequirement, MemoryCardContainer, MemorySummary, TitleRow } from "./styled";
 
 export default function MemoryCard({ data }: { data: ArweaveMappingValue }) {
   const [isDecrypting, setIsDecrypting] = useState(false);
@@ -16,6 +16,7 @@ export default function MemoryCard({ data }: { data: ArweaveMappingValue }) {
   const { decryptFile } = useLitProtocol();
 
   const handleDownload = async () => {
+    if (isDecrypting) return;
     try {
       if (connectStatus !== "connected") {
         addToast({ color: "warning", title: "Wallet not connected", description: "Please connect your wallet" });
@@ -52,22 +53,27 @@ export default function MemoryCard({ data }: { data: ArweaveMappingValue }) {
   };
 
   return (
-    <div className={styles.memoryCard}>
+    <MemoryCardContainer>
       <div className="flex flex-wrap items-start justify-between">
-        <div className={styles.titleRow}>
+        <TitleRow>
           <Tooltip content={data.address} placement="top-start">
             <div className="mb-2 cursor-pointer select-none text-2xl font-bold text-[#5dbae4] underline" onClick={() => router.push(`/creators/${data.address}`)}>
               {data.address.substring(0, 6)}...{data.address.substring(data.address.length - 4)}
             </div>
           </Tooltip>
-          <div className={styles.balanceRequirement}>💰 下载条件: {data.price}</div>
-        </div>
+          <BalanceRequirement>
+            <span className="select-none">💰 Download Requirement:</span>
+            <span>{data.price}</span>
+          </BalanceRequirement>
+        </TitleRow>
         <div className="mt-2 flex gap-4">
           <OrbButtonMiddle>Follow</OrbButtonMiddle>
-          <OrbButtonMiddle onClick={handleDownload}>{isDecrypting ? status : "Download"}</OrbButtonMiddle>
+          <OrbButtonMiddle disabled={isDecrypting} onClick={handleDownload}>{isDecrypting ? status : "Download"}</OrbButtonMiddle>
         </div>
       </div>
-      <div className={styles.memorySummary}>{data.description}</div>
-    </div>
+      <MemorySummary>
+        {data.description}
+      </MemorySummary>
+    </MemoryCardContainer>
   );
 }

@@ -18,6 +18,12 @@ export default {
         'bg-home': "url('../public/bg-home.png')"
       }
     },
+    fontFamily: {
+      'inter': ['var(--font-inter)', 'ui-sans-serif', 'system-ui'],
+      'geist-sans': ['var(--font-geist-sans)', 'ui-sans-serif', 'system-ui'],
+      'geist-mono': ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+      'orbitron': ['var(--font-orbitron)', 'ui-sans-serif', 'sans-serif'],
+    }
   },
   darkMode: "class",
   plugins: [heroui()],

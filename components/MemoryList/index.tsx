@@ -1,10 +1,10 @@
 "use client";
-import { useArweave } from "@/contexts/arweaveContext";
+import { useArweave } from "@/hooks/use-arweave";
 import { ArweaveMappingValue } from "@/hooks/use-arweave-mapping";
 import { Title } from "@/utils/styled";
+import { addToast, Spinner } from "@heroui/react";
 import { useEffect, useState } from "react";
 import MemoryCard from "../MemoryCard";
-import { addToast, Spinner } from "@heroui/react";
 
 export default function MemoryList({ title, address }: Readonly<{ title?: string, address?: string }>) {
   const [memoryList, setMemoryList] = useState<ArweaveMappingValue[]>([]);
@@ -27,8 +27,8 @@ export default function MemoryList({ title, address }: Readonly<{ title?: string
   }, [getLatestMemories, getUserMemories, address]);
 
   return (
-    <div className="m-auto max-w-[1000px] px-8 py-16">
-      <Title>Explore Memories</Title>
+    <div className="m-auto flex max-w-[1000px] flex-col gap-8 px-8 py-16">
+      <Title className="font-orbitron text-7xl">Explore Memories</Title>
 
       {loading ? (
         <div className="flex min-h-[50vh] items-center justify-center">

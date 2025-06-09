@@ -9,7 +9,7 @@ const Container = styled.div`
   padding: 4rem 2rem;
   text-align: center;
   position: relative;
-`
+`;
 
 export default function Home() {
   return (

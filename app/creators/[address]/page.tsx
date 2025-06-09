@@ -1,4 +1,4 @@
-import MemoryList from "@/components/MemoryList/memory-list"
+import MemoryList from "@/components/MemoryList";
 
 export default async function Creators({ params }: {
   params: Promise<{ address: string }>

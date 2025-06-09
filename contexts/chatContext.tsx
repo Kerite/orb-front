@@ -1,6 +1,6 @@
 import { ChatRecord } from "@/types";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 interface SendMessageParams {
   message: string,
@@ -14,7 +14,7 @@ const FingerPrintContext = createContext<{
   records: Readonly<ChatRecord>[];
   isChating: boolean;
   sendMessage: (params: Readonly<SendMessageParams>) => Promise<void>;
-  exportMemory: () => Promise<string>;
+  exportMemory: () => Promise<Blob>;
   importMemory: (file: File) => Promise<void>;
 }>({
   fingerprint: "",
@@ -131,7 +131,7 @@ export const ChatProvider = ({
     }
   }, [fingerprint, isChating]);
 
-  const exportMemory = useCallback(async (): Promise<string> => {
+  const exportMemory = useCallback(async (): Promise<Blob> => {
     try {
       const userId = fingerprint;
       console.log(`Starting memory snapshot export for user: ${userId}...`);
@@ -156,27 +156,8 @@ export const ChatProvider = ({
       }
 
       const blob = await response.blob();
-      console.log("Received blob:", blob.size, "bytes");
 
-      const url = window.URL.createObjectURL(blob);
-
-      // Create a hidden download link
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-
-      // Name the file using a timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      a.download = `memory-snapshot-${timestamp}.snapshot`;
-
-      document.body.appendChild(a);
-      a.click();
-
-      // Clean up
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      return a.download;
+      return blob;
     } catch (error) {
       console.error("Memory export failed:", error);
       throw error;
@@ -214,8 +195,17 @@ export const ChatProvider = ({
     }
   }, [fingerprint]);
 
+  const contextValue = useMemo(() => ({
+    fingerprint,
+    records,
+    isChating,
+    sendMessage,
+    exportMemory,
+    importMemory
+  }), [fingerprint, records, isChating, sendMessage, exportMemory, importMemory]);
+
   return (
-    <FingerPrintContext.Provider value={{ fingerprint, records, isChating, sendMessage, exportMemory, importMemory }}>
+    <FingerPrintContext.Provider value={contextValue}>
       {children}
     </FingerPrintContext.Provider>
   )
@@ -227,4 +217,11 @@ export const useChat = () => {
     throw new Error("useChat() must be used within a FingerprintProvider");
   }
   return context;
+}
+
+export const useExportMemory = () => {
+  const { exportMemory } = useChat();
+  return {
+    exportMemory
+  };
 }

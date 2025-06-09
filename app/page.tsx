@@ -12,19 +12,19 @@ const Container = styled.div`
   text-align: center;
   z-index: 1;
   position: relative;
-`
+`;
 
 const Subtitle = styled.p`
   font-size: 1.2rem;
   margin-bottom: 3rem;
   opacity: 0.7;
-`
+`;
 
 const Enter = styled.div`
   margin-top: 4rem;
   opacity: 0.6;
   animation: ${FloatTech} 3s ease-in-out infinite;
-`
+`;
 
 export default function HomePage() {
   return (

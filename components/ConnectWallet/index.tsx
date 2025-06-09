@@ -1,12 +1,22 @@
 "use client";
-import { useEthers } from "@/contexts/ethersContext";
-import { addToast } from "@heroui/react";
+import { useLitProtocol } from "@/contexts/litProtocolContext";
+import { useEthers } from "@/hooks/use-ethers";
+import { OrbButtonTiny } from "@/utils/styled";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
-const WalletButton = styled.div`
+const WalletButtonContainer = styled.div`
   position: fixed;
   top: 20px;
   right: 30px;
+  user-select: none;
+  z-index: 999;
+`;
+
+const WalletButton = styled.div`
+  position: relative;
+  display: inline-block;
 `;
 
 const WalletButtonTrigger = styled.button`
@@ -25,24 +35,77 @@ const WalletButtonTrigger = styled.button`
   }
 `;
 
+const DropdownContainer = styled(motion.div)`
+  display: absolute;
+  border: 1px solid var(--accent-color);
+  border-radius: 20px;
+  padding: 12px;
+  color: var(--text-color);
+  margin-top: 10px;
+`;
+
 export default function ConnectWallet() {
-  const { requireProvider, connectStatus, walletAddress } = useEthers();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { status: litProtocolStatus } = useLitProtocol();
+  const {
+    requireProvider,
+    connectStatus,
+    currentAccount,
+    disconnect: disconnectWallet,
+  } = useEthers();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if the clicked element is outside the wallet button or dropdown
+      if (!target.closest("#connect-wallet")) {
+        setIsDropdownOpen(false);
+      }
+    };
+    window.addEventListener("click", handleClickOutside);
+    return () => {
+      window.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <WalletButton>
-      <WalletButtonTrigger disabled={connectStatus !== "disconnected"} onClick={async () => {
-        try {
-          await requireProvider();
-          addToast({ title: "Wallet connected", color: "success" });
-        } catch (error) {
-          addToast({ title: "Connect wallet failed", description: `${error}`, color: "danger" });
-        }
-      }}>
-        {
-          connectStatus === "connected" ? walletAddress :
-            connectStatus === "connecting" ? "🔄 Connecting..." : "🔗 Connect Wallet"
-        }
-      </WalletButtonTrigger>
-    </WalletButton>
-  )
-}
+    <WalletButtonContainer id="connect-wallet">
+      <WalletButton>
+        <WalletButtonTrigger
+          className="font-geist-mono"
+          onClick={async () => {
+            if (connectStatus === "disconnected") {
+              await requireProvider();
+              return;
+            } else if (connectStatus === "connected") {
+              setIsDropdownOpen(!isDropdownOpen);
+              return;
+            }
+          }}
+        >
+          {
+            connectStatus === "connected" ? currentAccount :
+              connectStatus === "connecting" ? "🔄 Connecting..." : "🔗 Connect Wallet"
+          }
+        </WalletButtonTrigger>
+        <AnimatePresence>
+          {isDropdownOpen && connectStatus === "connected" && (
+            <DropdownContainer
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <div className="flex flex-col gap-2 font-inter">
+                <div>
+                  <span>Lit Client:</span>
+                  <span>{litProtocolStatus}</span>
+                </div>
+                <OrbButtonTiny $noGlow onClick={disconnectWallet}>Disconnect Wallet</OrbButtonTiny>
+              </div>
+            </DropdownContainer>
+          )}
+        </AnimatePresence>
+      </WalletButton>
+    </WalletButtonContainer>
+  );
+};

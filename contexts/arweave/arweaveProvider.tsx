@@ -1,25 +1,8 @@
 "use client";
 import { useArweaveMapping } from "@/hooks/use-arweave-mapping";
-import { errorFunction } from "@/utils/constants";
 import Arweave from "arweave";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useState,
-} from "react";
-
-interface ArweaveContextInterface extends ReturnType<typeof useArweaveMapping> {
-  fetchFile: (transactionId: string) => Promise<ArrayBuffer>;
-}
-
-const ArweaveContext = createContext<ArweaveContextInterface>({
-  fetchFile: errorFunction,
-  addMemoryMapping: errorFunction,
-  getMemoryAmount: errorFunction,
-  getLatestMemories: errorFunction,
-  getUserMemories: errorFunction,
-});
+import { useCallback, useMemo, useState } from "react";
+import { ArweaveContext, ArweaveContextInterface } from "./arweaveContext";
 
 export function ArweaveProvider({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => Arweave.init({
@@ -46,18 +29,14 @@ export function ArweaveProvider({ children }: { children: React.ReactNode }) {
     [client]
   );
 
+  const contextValue = useMemo<ArweaveContextInterface>(() => ({
+    fetchFile,
+    ...arweaveMapping,
+  }), [arweaveMapping, fetchFile])
+
   return (
-    <ArweaveContext.Provider
-      value={{
-        fetchFile,
-        ...arweaveMapping,
-      }}
-    >
+    <ArweaveContext.Provider value={contextValue}>
       {children}
     </ArweaveContext.Provider>
   );
-}
-
-export function useArweave() {
-  return useContext(ArweaveContext);
 }

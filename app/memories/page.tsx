@@ -1,5 +1,5 @@
 "use client"
-import MemoryList from "@/components/MemoryList/memory-list";
+import MemoryList from "@/components/MemoryList";
 
 export default function MemoriesPage() {
   return (

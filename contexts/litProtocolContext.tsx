@@ -1,4 +1,5 @@
 "use client";
+import { useEthers } from "@/hooks/use-ethers";
 import { LPACC_EVM_BASIC } from "@lit-protocol/accs-schemas";
 import { createSiweMessageWithRecaps, generateAuthSig, LitAccessControlConditionResource, LitActionResource } from "@lit-protocol/auth-helpers";
 import { LIT_ABILITY, LIT_NETWORK } from "@lit-protocol/constants";
@@ -6,11 +7,11 @@ import { LitContracts } from "@lit-protocol/contracts-sdk";
 import { encryptFile as litEncryptFile } from "@lit-protocol/encryption";
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { AccessControlConditions, EncryptResponse, LIT_NETWORKS_KEYS, LitResourceAbilityRequest } from "@lit-protocol/types";
-import { createContext, useCallback, useContext, useEffect, useReducer, useState } from "react";
-import { useEthers } from "./ethersContext";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
 
 interface LitProtocolProviderState {
   status: "disconnected" | "connecting" | "connected";
+  error?: Error;
 }
 
 const initialState: LitProtocolProviderState = {
@@ -30,14 +31,14 @@ interface DecryptFileParams {
   onProcess?: (status: string) => void;
 }
 
-interface LitProtocolContext extends LitProtocolProviderState {
+interface LitProtocolContextInterface extends LitProtocolProviderState {
   litNodeClient?: LitNodeClient;
   switchLitNetwork: (network: LIT_NETWORKS_KEYS) => void;
   encryptFile: (params: EncryptFileParams) => Promise<EncryptResponse>;
   decryptFile: (params: DecryptFileParams) => Promise<Blob>;
 }
 
-const LitProtocolContext = createContext<LitProtocolContext>({
+const LitProtocolContext = createContext<LitProtocolContextInterface>({
   ...initialState,
   switchLitNetwork: () => { },
   encryptFile: () => { throw new Error("encryptFile not implemented"); },
@@ -45,7 +46,7 @@ const LitProtocolContext = createContext<LitProtocolContext>({
 });
 
 export type LitProtocolProviderAction =
-  | { type: "DISCONNECTED" }
+  | { type: "DISCONNECTED"; error?: Error }
   | { type: "CONNECTED" }
   | { type: "CONNECTING" };
 
@@ -55,11 +56,19 @@ const litProtocolStateReducer = (state: LitProtocolProviderState, action: LitPro
       return {
         ...state,
         status: "disconnected",
+        error: action.error,
       };
     case "CONNECTED":
       return {
         ...state,
         status: "connected",
+        error: undefined,
+      };
+    case "CONNECTING":
+      return {
+        ...state,
+        status: "connecting",
+        error: undefined,
       };
     default:
       return state;
@@ -73,28 +82,6 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
   const [state, dispatch] = useReducer(litProtocolStateReducer, initialState);
   // const initialized = useRef(false);
   const [usedBlockchain] = useState<LPACC_EVM_BASIC["chain"]>("sepolia");
-
-  // useEffect(() => {
-  //   if (initialized.current) return;
-  //   initialized.current = true;
-  //   (async () => {
-  //     try {
-  //       dispatch({ type: "CONNECTING" });
-  //       await litNodeClient.connect();
-  //       dispatch({ type: "CONNECTED" });
-  //     } catch (error) {
-  //       console.error("Lit client connect error:", error);
-  //       dispatch({ type: "DISCONNECTED" });
-  //     }
-  //   })();
-  // }, [litNodeClient]);
-
-  useEffect(() => {
-    const newClient = new LitNodeClient({
-      litNetwork,
-    });
-    setLitNodeClient(newClient);
-  }, [litNetwork]);
 
   const switchLitNetwork = useCallback(
     (network: LIT_NETWORKS_KEYS) => {
@@ -116,7 +103,7 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
     []
   );
 
-  const encryptFile = useCallback<LitProtocolContext["encryptFile"]>(async (params: EncryptFileParams) => {
+  const encryptFile = useCallback<LitProtocolContextInterface["encryptFile"]>(async (params: EncryptFileParams) => {
     const { file, condition, onProcess } = params;
     try {
       onProcess?.("Connecting to Lit Node Client...");
@@ -132,7 +119,8 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
       return res;
     } catch (error) {
       console.error("Error encrypting file:", error);
-      throw error;
+      onProcess?.(`Encryption failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Encryption failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }, [litNodeClient, usedBlockchain]);
 
@@ -169,7 +157,6 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
     onProcess?.("Creating capacity delegation auth sig...");
     const { capacityDelegationAuthSig } = await litNodeClient.createCapacityDelegationAuthSig({
       dAppOwnerWallet: signer,
-      uses: '1',
       capacityTokenId: capacityTokenIdStr,
       delegateeAddresses: [await signer.getAddress()],
     });
@@ -221,7 +208,7 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
     return sessionSigs;
   }, [litNodeClient, usedBlockchain, requireProvider, requireNetwork]);
 
-  const decryptFile = useCallback<LitProtocolContext["decryptFile"]>(async (data: DecryptFileParams): Promise<Blob> => {
+  const decryptFile = useCallback<LitProtocolContextInterface["decryptFile"]>(async (data: DecryptFileParams): Promise<Blob> => {
     try {
       const { ciphertext, dataToEncryptHash, condition, onProcess } = data;
       if (!ciphertext || !dataToEncryptHash) {
@@ -249,14 +236,51 @@ export function LitProtocolProvider({ children }: { children: React.ReactNode })
     }
   }, [getSessionSignatures, litNodeClient, usedBlockchain]);
 
+  useEffect(() => {
+    const newClient = new LitNodeClient({
+      litNetwork,
+    });
+    setLitNodeClient(newClient);
+  }, [litNetwork]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        dispatch({ type: "CONNECTING" });
+        await litNodeClient.connect();
+        if (mounted) {
+          dispatch({ type: "CONNECTED" });
+        }
+      } catch (error) {
+        console.error("Lit client connect error:", error);
+        if (mounted) {
+          dispatch({ type: "DISCONNECTED" });
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      try {
+        litNodeClient.disconnect?.();
+      } catch (error) {
+        console.warn("Error disconnecting from Lit client:", error);
+      }
+    };
+  }, [litNodeClient]);
+
+  const contextValue = useMemo<LitProtocolContextInterface>(() => ({
+    ...state,
+    litNodeClient,
+    encryptFile,
+    decryptFile,
+    switchLitNetwork
+  }), [state, litNodeClient, encryptFile, decryptFile, switchLitNetwork])
+
   return (
-    <LitProtocolContext.Provider value={{
-      ...state,
-      litNodeClient,
-      encryptFile,
-      decryptFile,
-      switchLitNetwork
-    }}>
+    <LitProtocolContext.Provider value={contextValue}>
       {children}
     </LitProtocolContext.Provider>
   );

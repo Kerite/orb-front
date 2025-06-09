@@ -1,8 +1,8 @@
 "use client";
 import SideBar from "@/components/SideBar";
-import { ArweaveProvider } from "@/contexts/arweaveContext";
+import { ArweaveProvider } from "@/contexts/arweave";
 import { ChatProvider } from "@/contexts/chatContext";
-import { EthersProvider } from "@/contexts/ethersContext";
+import { EthersProvider } from "@/contexts/ethers";
 import { LitProtocolProvider } from "@/contexts/litProtocolContext";
 import { ToastProvider } from "@heroui/react";
 import { HeroUIProvider } from "@heroui/system";
@@ -16,11 +16,10 @@ export default function Providers({
 }>) {
   const router = useRouter();
   const pathname = usePathname();
+
   return (
     <>
-      {
-        pathname !== "/" && <SideBar />
-      }
+      {pathname !== "/" && <SideBar />}
       <HeroUIProvider navigate={router.push}>
         <ToastProvider />
         <EthersProvider>

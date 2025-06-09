@@ -9,34 +9,48 @@ const arweaveClient = Arweave.init({
   protocol: "https",
 });
 
+class InsufficientBalanceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InsufficientError";
+  }
+}
+
 const uploadFileToArweave = async (data: ArrayBuffer): Promise<string> => {
-  try {
-    const privateKeyVal = process.env.ARWEAVE_KEY;
-    if (!privateKeyVal) {
-      throw new Error('Arweave private key is not set in environment variables.');
-    }
-    const privateKey: JWKInterface = JSON.parse(atob(privateKeyVal));
-    const transaction = await arweaveClient.createTransaction(
-      { data },
-      privateKey
-    );
-    await arweaveClient.transactions.sign(transaction, privateKey);
-    const res = await arweaveClient.transactions.post(transaction);
-    if (res.status === 200) {
-      return transaction.id;
-    } else {
-      console.error("Transaction failed:", res.statusText);
-      throw new Error("Transaction failed");
-    }
-  } catch (error) {
-    console.error('Error uploading file to Arweave:', error);
-    throw error;
+  const privateKeyVal = process.env.ARWEAVE_KEY;
+  if (!privateKeyVal) {
+    throw new Error('Arweave private key is not set in environment variables.');
+  }
+  const privateKey: JWKInterface = JSON.parse(atob(privateKeyVal));
+  const accountAddress = await arweaveClient.wallets.getAddress(privateKey);
+  const transaction = await arweaveClient.createTransaction(
+    { data },
+    privateKey
+  );
+  const transactionPrice = await arweaveClient.transactions.getPrice(transaction.data.length, accountAddress);
+  console.log("Transaction Price:", transactionPrice);
+
+  const balance = await arweaveClient.wallets.getBalance(accountAddress);
+  console.log("Account address:", accountAddress);
+  console.log("Wallet balance:", balance);
+
+  if (Number(transactionPrice) > Number(balance)) {
+    throw new InsufficientBalanceError("Insufficient balance to cover transaction fee.");
+  }
+
+  await arweaveClient.transactions.sign(transaction, privateKey);
+  const res = await arweaveClient.transactions.post(transaction);
+  if (res.status === 200) {
+    return transaction.id;
+  } else {
+    console.error("Transaction response:", res);
+    throw new Error("Transaction failed");
   }
 }
 
 const encoder = new TextEncoder();
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const data: {
       ciphertext: string;
@@ -57,7 +71,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, transactionId });
   } catch (error) {
     console.error('Error in API route:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    if (error instanceof InsufficientBalanceError) {
+      return NextResponse.json({
+        error: 'Insufficient balance to cover transaction fee.'
+      }, {
+        status: 402
+      });
+    } else if (error instanceof Error) {
+      return NextResponse.json({
+        error: 'Insufficient balance to cover transaction fee.'
+      }, {
+        status: 402
+      });
+    } else {
+      return NextResponse.json({
+        error: 'Internal Server Error'
+      }, {
+        status: 500
+      });
+    }
   }
 }
 

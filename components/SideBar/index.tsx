@@ -15,6 +15,7 @@ const Sidebar = styled.div`
   padding: 1rem;
   z-index: 2;
   box-shadow: 0 0 15px rgba(141, 224, 240, 0.2);
+  user-select: none;
 
   @media (max-width: 1024px) {
     flex-direction: row;
@@ -52,7 +53,7 @@ export default function SideBar() {
   return (
     <Sidebar>
       <NavLink href="/chat">
-        <span>🧠</span>
+        <span >🧠</span>
         <span className="hidden sm:block">Build</span>
       </NavLink>
       <NavLink href="/memories">

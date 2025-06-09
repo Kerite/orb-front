@@ -1,11 +1,11 @@
 "use client";
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Input, Select, SelectItem } from "@heroui/react";
-import { AccsDefaultParams } from "@lit-protocol/types";
-import { properties } from "@lit-protocol/accs-schemas/schemas/LPACC_EVM_BASIC"
-import styled from "styled-components";
-import { Dispatch } from "react";
 import { DEFAULT_CONDITION } from "@/utils/constants";
+import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Input, Select, SelectItem } from "@heroui/react";
+import { properties } from "@lit-protocol/accs-schemas/schemas/LPACC_EVM_BASIC";
+import { AccsDefaultParams } from "@lit-protocol/types";
 import { ethers } from "ethers";
+import { Dispatch } from "react";
+import styled from "styled-components";
 
 const Container = styled.div`
   border: 1px solid #ddd;
@@ -193,7 +193,7 @@ export default function NormalCondition({ condition, updateCondition }: {
             startContent={
               <div className='flex items-center'>
                 <select
-                  className='outline-none border-0 bg-transparent text-small'
+                  className='border-0 bg-transparent text-small outline-none'
                   value={condition.returnValueTest.comparator}
                   onChange={(e) => {
                     updateCondition({
