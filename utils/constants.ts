@@ -1,4 +1,26 @@
+import { LPACC_EVM_BASIC } from "@lit-protocol/accs-schemas";
 import { AccsDefaultParams } from "@lit-protocol/types";
+
+export const litChains: Readonly<LPACC_EVM_BASIC["chain"][]> = [
+  "sepolia"
+]
+
+export const standardContractTypes: Readonly<LPACC_EVM_BASIC["standardContractType"][]> = [
+  "",
+  "ERC20",
+  "ERC721",
+  "ERC721MetadataName",
+  "ERC1155",
+  "CASK",
+  "Creaton",
+  "POAP",
+  "timestamp",
+  "MolochDAOv2.1",
+  "ProofOfHumanity",
+  "SIWE",
+  "PKPPermissions",
+  "LitAction"
+];
 
 export const errorFunction = () => { throw new Error("Function not implemented"); };
 

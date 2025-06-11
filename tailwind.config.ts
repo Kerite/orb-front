@@ -11,12 +11,14 @@ export default {
   theme: {
     extend: {
       colors: {
+        accent: "var(--accent-color)",
         background: "var(--background)",
         foreground: "var(--foreground)",
+        normal: "var(--text-color)",
       },
       backgroundImage: {
         'bg-home': "url('../public/bg-home.png')"
-      }
+      },
     },
     fontFamily: {
       'inter': ['var(--font-inter)', 'ui-sans-serif', 'system-ui'],

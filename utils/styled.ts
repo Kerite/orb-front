@@ -6,10 +6,6 @@ export const RecordsButton = styled.button`
   border-radius: 50px;
 `;
 
-export const FlexDiv = styled.div`
-  display: flex;
-`;
-
 export const OrbButton = styled.button<{ $noGlow?: boolean }>`
   padding: 1.125rem 2.25rem;
   font-size: 1rem;
@@ -62,6 +58,10 @@ export const OrbButtonTiny = styled(OrbButton)`
   && {
     padding: 0.25rem 0.5rem;
     font-size: 0.85rem;
+  }
+
+  &:hover:not([disabled]) {
+    scale: 1.01;
   }
 `;
 

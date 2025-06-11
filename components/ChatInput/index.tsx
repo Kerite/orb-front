@@ -1,6 +1,6 @@
 "use client";
 import { useChat } from "@/contexts/chatContext";
-import { FlexDiv, OrbButton } from "@/utils/styled";
+import { OrbButton } from "@/utils/styled";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
@@ -55,7 +55,7 @@ export function MessageInput({ onSend }: MessageInputProps) {
   }, [isChating]);
 
   return (
-    <FlexDiv className="gap-2">
+    <div className="flex gap-2">
       <ChatMessageInput
         ref={chatInputRef}
         disabled={isChating}
@@ -70,6 +70,6 @@ export function MessageInput({ onSend }: MessageInputProps) {
         onChange={(e) => setMessage(e.target.value)}
       />
       <ChatButton disabled={isChating} onClick={() => handleSendMessage(message)}>📤</ChatButton>
-    </FlexDiv>
+    </div>
   )
 }

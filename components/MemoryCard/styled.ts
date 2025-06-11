@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
 export const MemoryCardContainer = styled.div`
+  display: flex;
   background-color: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--accent-color);
   border-radius: 20px;

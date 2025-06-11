@@ -1,8 +1,13 @@
 "use client";
-import { useArweaveMapping } from "@/hooks/use-arweave-mapping";
 import Arweave from "arweave";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArweaveContext, ArweaveContextInterface } from "./arweaveContext";
+
+const shouldAutoConnectWallet = (): boolean => {
+  return Boolean(localStorage.getItem("ARWEAVE_AUTO_CONNECT"));
+}
+
+const encoder = new TextEncoder();
 
 export function ArweaveProvider({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => Arweave.init({
@@ -10,7 +15,37 @@ export function ArweaveProvider({ children }: { children: React.ReactNode }) {
     port: 443,
     protocol: "https",
   }));
-  const arweaveMapping = useArweaveMapping();
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+  const uploadFile = useCallback<ArweaveContextInterface["uploadFile"]>(async (data) => {
+    const transaction = await client.createTransaction({
+      data: encoder.encode(JSON.stringify(data)).buffer as ArrayBuffer,
+    }, "use_wallet");
+    await client.transactions.sign(transaction, "use_wallet");
+
+    const address = await client.wallets.getAddress("use_wallet");
+    console.log("[Arweave] Uploading file to Arweave using address:", address);
+
+    // Check arweave wallet balance before uploading
+    // const price = await client.transactions.getPrice(transaction.data.byteLength, "use_wallet");
+    // const balance = await client.wallets.getBalance("use_wallet");
+    // if (Number(balance) < Number(price)) {
+    //   console.error("[Arweave] Insufficient balance to upload file.");
+    //   throw new Error(`Insufficient balance to upload file to Arweave. Needs ${price}, but has ${balance}`);
+    // }
+
+    const uploader = await client.transactions.getUploader(transaction);
+
+    while (!uploader.isComplete) {
+      await uploader.uploadChunk();
+      console.log(`${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`);
+    }
+    if (uploader.lastResponseError) {
+      console.error("[Arweave] Upload failed:", uploader.lastResponseError);
+      throw new Error(`Failed to upload file to Arweave: ${uploader.lastResponseError}`);
+    }
+    return transaction.id;
+  }, [client]);
 
   const fetchFile = useCallback(
     async (transactionId: string) => {
@@ -23,16 +58,34 @@ export function ArweaveProvider({ children }: { children: React.ReactNode }) {
       if (data instanceof Uint8Array) {
         return data.buffer as ArrayBuffer;
       }
-      const encoder = new TextEncoder();
       return encoder.encode(data).buffer as ArrayBuffer;
     },
-    [client]
+    [client.transactions]
   );
 
+  useEffect(() => {
+    if (shouldAutoConnectWallet()) {
+      (async () => {
+        try {
+          const address = await client.wallets.jwkToAddress("use_wallet")
+          if (address) {
+            setWalletAddress(address);
+            console.log("[Arweave] Auto-connected wallet address:", address);
+          } else {
+            console.warn("[Arweave] No wallet address found for auto-connect.");
+          }
+        } catch (error) {
+          console.error("[Arweave] Error auto-connecting wallet:", error);
+        }
+      })()
+    }
+  }, [client.wallets]);
+
   const contextValue = useMemo<ArweaveContextInterface>(() => ({
+    walletAddress,
     fetchFile,
-    ...arweaveMapping,
-  }), [arweaveMapping, fetchFile])
+    uploadFile,
+  }), [fetchFile, uploadFile, walletAddress]);
 
   return (
     <ArweaveContext.Provider value={contextValue}>

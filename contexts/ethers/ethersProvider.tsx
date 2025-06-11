@@ -3,14 +3,14 @@ import { shouldAutoConnectWallet } from "@/lib/utils";
 import { networks } from "@/utils/constants";
 import { addToast } from "@heroui/react";
 import { ethers } from "ethers";
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { ethersContext, EthersContextInterface, EthersState, initialState } from "./ethersContext";
 
 type EthersAction =
   | { action: "CHANGE_NETWORK", networkId: string }
   | { action: "ADDRESS_CHANGES", address: string }
   | { action: "WALLET_CONNECTING" }
-  | { action: "WALLET_DISCONNECTED" }
+  | { action: "WALLET_DISCONNECTED", isManual: boolean, reason?: Error }
   | { action: "WALLET_CONNECTED", addresses: string[], address: string };
 
 const ethersReducer = (state: EthersState, action: EthersAction): EthersState => {
@@ -24,6 +24,7 @@ const ethersReducer = (state: EthersState, action: EthersAction): EthersState =>
       return { ...state, currentAccount: action.address };
     }
     case "WALLET_CONNECTING": {
+      console.debug("Connecting to wallet...");
       return { ...state, connectStatus: "connecting" };
     }
     case "WALLET_CONNECTED": {
@@ -32,9 +33,12 @@ const ethersReducer = (state: EthersState, action: EthersAction): EthersState =>
       return { ...state, connectStatus: "connected", addresses: action.addresses, currentAccount: action.address };
     }
     case "WALLET_DISCONNECTED": {
-      localStorage.removeItem("WALLET_CONNECTED");
+      if (action.isManual) {
+        console.log("Removing auto connect flag")
+        localStorage.removeItem("WALLET_CONNECTED");
+      }
       console.log("Wallet disconnected");
-      return { ...state, connectStatus: "disconnected", currentAccount: null };
+      return { ...state, connectStatus: "disconnected", addresses: [], currentAccount: null };
     }
     default:
       return state;
@@ -44,6 +48,7 @@ const ethersReducer = (state: EthersState, action: EthersAction): EthersState =>
 export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
   const [state, dispatch] = useReducer(ethersReducer, initialState);
+  const isAutoConnectionAttempted = useRef(false);
 
   // 创建和初始化 provider 的函数
   const createProvider = useCallback(() => {
@@ -52,11 +57,11 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const disconnect = useCallback(() => {
-    dispatch({ action: "WALLET_DISCONNECTED" });
-  }, []);
-
-  const changeAddress = useCallback((address: string) => {
-    dispatch({ action: "ADDRESS_CHANGES", address });
+    dispatch({
+      action: "WALLET_DISCONNECTED",
+      isManual: true,
+      reason: new Error("User disconnected")
+    });
   }, []);
 
   const requireProvider = useCallback<EthersContextInterface["requireProvider"]>(async () => {
@@ -68,9 +73,15 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
       if (state.connectStatus === "connecting") {
         throw new Error("Already connecting to wallet");
       }
+
       dispatch({ action: "WALLET_CONNECTING" });
+
       if (!window.ethereum) {
-        dispatch({ action: "WALLET_DISCONNECTED" });
+        dispatch({
+          action: "WALLET_DISCONNECTED",
+          isManual: false,
+          reason: new Error("No wallet installed")
+        });
         throw new Error("No wallet installed");
       }
 
@@ -97,7 +108,7 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
       return usedProvider;
     } catch (error) {
       console.error("Error connecting to wallet:", error);
-      dispatch({ action: "WALLET_DISCONNECTED" });
+      dispatch({ action: "WALLET_DISCONNECTED", isManual: false, reason: error as Error });
       throw error;
     }
   }, [provider, state.connectStatus, createProvider]);
@@ -124,30 +135,38 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
   }, [provider]);
 
   useEffect(() => {
-    console.log("Initializing Ethers provider...");
-    if (window.ethereum) {
-      const newProvider = new ethers.providers.Web3Provider(window.ethereum, 'any');
-      setProvider(newProvider);
-
-      if (shouldAutoConnectWallet()) {
-        (async () => {
-          try {
-            await requireProvider();
-          } catch (error) {
-            console.error("Auto-connect failed:", error);
-          }
-        })();
-      }
+    if (state.connectStatus === "disconnected") {
+      setProvider(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [state.connectStatus]);
+
+  useEffect(() => {
+    if (window.ethereum && !provider) {
+      const newEthersProvider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+      setProvider(newEthersProvider);
+    }
+  }, [provider, state.connectStatus]);
+
+  useEffect(() => {
+    if (provider && shouldAutoConnectWallet() && !isAutoConnectionAttempted.current) {
+      console.log("Auto Connecting...");
+      isAutoConnectionAttempted.current = true;
+      (async () => {
+        try {
+          await requireProvider();
+        } catch (error) {
+          console.error("Auto-connect failed:", error);
+        }
+      })();
+    }
+  }, [provider, isAutoConnectionAttempted, requireProvider]);
 
   useEffect(() => {
     if (!window.ethereum) return;
 
     const handleAccountsChanged = (accounts: string[]) => {
       if (accounts.length === 0) {
-        dispatch({ action: "WALLET_DISCONNECTED" });
+        dispatch({ action: "WALLET_DISCONNECTED", isManual: false, reason: new Error("No accounts found") });
       } else if (state.currentAccount !== accounts[0]) {
         dispatch({ action: "ADDRESS_CHANGES", address: accounts[0] });
       }
@@ -163,10 +182,9 @@ export const EthersProvider = ({ children }: { children: React.ReactNode }) => {
   const contextValue = useMemo<EthersContextInterface>(() => ({
     ...state,
     disconnect,
-    changeAddress,
     requireNetwork,
     requireProvider,
-  }), [state, disconnect, changeAddress, requireNetwork, requireProvider]);
+  }), [state, disconnect, requireNetwork, requireProvider]);
 
   return (
     <ethersContext.Provider value={contextValue}>

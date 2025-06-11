@@ -6,7 +6,7 @@ import { OrbButtonMiddle } from "@/utils/styled";
 import { addToast, Tooltip } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BalanceRequirement, MemoryCardContainer, MemorySummary, TitleRow } from "./styled";
+import { BalanceRequirement, MemoryCardContainer, TitleRow } from "./styled";
 
 export default function MemoryCard({ data }: { data: ArweaveMappingValue }) {
   const [isDecrypting, setIsDecrypting] = useState(false);
@@ -53,8 +53,8 @@ export default function MemoryCard({ data }: { data: ArweaveMappingValue }) {
   };
 
   return (
-    <MemoryCardContainer>
-      <div className="flex flex-wrap items-start justify-between">
+    <MemoryCardContainer className="flex flex-col justify-between sm:flex-row">
+      <div className="flex flex-col flex-wrap items-start justify-between gap-4">
         <TitleRow>
           <Tooltip content={data.address} placement="top-start">
             <div className="mb-2 cursor-pointer select-none text-2xl font-bold text-[#5dbae4] underline" onClick={() => router.push(`/creators/${data.address}`)}>
@@ -66,14 +66,14 @@ export default function MemoryCard({ data }: { data: ArweaveMappingValue }) {
             <span>{data.price}</span>
           </BalanceRequirement>
         </TitleRow>
-        <div className="mt-2 flex gap-4">
-          <OrbButtonMiddle>Follow</OrbButtonMiddle>
-          <OrbButtonMiddle disabled={isDecrypting} onClick={handleDownload}>{isDecrypting ? status : "Download"}</OrbButtonMiddle>
+        <div className="text-medium text-normal">
+          {data.description}
         </div>
       </div>
-      <MemorySummary>
-        {data.description}
-      </MemorySummary>
+      <div className="mb-auto ml-auto mt-2 flex gap-4">
+        <OrbButtonMiddle>Follow</OrbButtonMiddle>
+        <OrbButtonMiddle disabled={isDecrypting} onClick={handleDownload}>{isDecrypting ? status : "Download"}</OrbButtonMiddle>
+      </div>
     </MemoryCardContainer>
   );
 }

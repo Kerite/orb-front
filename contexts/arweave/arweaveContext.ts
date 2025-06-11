@@ -1,16 +1,17 @@
 "use client";
-import { useArweaveMapping } from "@/hooks/use-arweave-mapping";
-import { errorFunction } from "@/utils/constants";
-import { createContext } from "react";
+import { AccessControlConditions, EncryptResponse } from "@lit-protocol/types";
+import { createContext, useContext } from "react";
 
-export interface ArweaveContextInterface extends ReturnType<typeof useArweaveMapping> {
+export interface ArweaveContextInterface {
   fetchFile: (transactionId: string) => Promise<ArrayBuffer>;
+  uploadFile: (param: EncryptResponse & {
+    condition: AccessControlConditions;
+    originalFileName: string;
+  }) => Promise<string>;
 }
 
-export const ArweaveContext = createContext<ArweaveContextInterface>({
-  fetchFile: errorFunction,
-  addMemoryMapping: errorFunction,
-  getMemoryAmount: errorFunction,
-  getLatestMemories: errorFunction,
-  getUserMemories: errorFunction,
-});
+export const ArweaveContext = createContext<ArweaveContextInterface | undefined>(undefined);
+
+export function useArweave() {
+  return useContext(ArweaveContext);
+}

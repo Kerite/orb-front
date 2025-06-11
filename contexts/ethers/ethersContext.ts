@@ -1,5 +1,5 @@
 "use client";
-import { errorFunction, networks } from "@/utils/constants";
+import { networks } from "@/utils/constants";
 import { ethers } from "ethers";
 import { createContext } from "react";
 
@@ -18,14 +18,7 @@ export const initialState: Readonly<EthersState> = {
 export interface EthersContextInterface extends EthersState {
   requireNetwork: (chainId: keyof typeof networks) => Promise<void>;
   requireProvider: () => Promise<ethers.providers.Web3Provider>;
-  changeAddress: (address: string) => void;
   disconnect: () => void;
 }
 
-export const ethersContext = createContext<EthersContextInterface>({
-  ...initialState,
-  requireNetwork: errorFunction,
-  requireProvider: errorFunction,
-  changeAddress: errorFunction,
-  disconnect: errorFunction,
-});
+export const ethersContext = createContext<EthersContextInterface | undefined>(undefined);

@@ -1,7 +1,9 @@
 "use client";
+import { useArweave } from "@/contexts/arweave";
 import { useExportMemory } from "@/contexts/chatContext";
+import { useLitProtocol } from "@/contexts/litProtocolContext";
+import { useMemoryMappingContract } from "@/hooks/use-arweave-mapping";
 import { useEthers } from "@/hooks/use-ethers";
-import { useShareMemory } from "@/hooks/use-share-memory";
 import { handleError } from "@/lib/utils";
 import { DEFAULT_CONDITION } from "@/utils/constants";
 import { Button, ButtonGroup, PressEvent } from "@heroui/button";
@@ -105,16 +107,14 @@ const UploadButtonReducer = (state: typeof InitialUploadButtonState, action: Upl
   }
 }
 
-const ShareMemoryButton: React.FC<UploadButtonProps> = ({ onUploadFinished, children }) => {
+const ShareMemoryButton: React.FC<UploadButtonProps> = ({ children }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [state, dispatch] = useReducer(UploadButtonReducer, InitialUploadButtonState);
   const { exportMemory } = useExportMemory();
   const { connectStatus } = useEthers();
-  const { executeAsync: shareMemory } = useShareMemory();
-  const { isOpen, onOpen, onClose } = useDisclosure({
-    onClose: () => {
-      dispatch({ type: "RESET" });
-    }
-  });
+  const { encryptFile } = useLitProtocol();
+  const { uploadFile } = useArweave();
+  const { addMemoryMapping } = useMemoryMappingContract();
 
   const memoryUploadRef = React.useRef<HTMLInputElement>(null);
 
@@ -138,23 +138,22 @@ const ShareMemoryButton: React.FC<UploadButtonProps> = ({ onUploadFinished, chil
         file = new File([blob], `memory-${new Date().toISOString()}.snapshot`, { type: "application/octet-stream" });
       }
 
-      dispatch({ type: "UPDATE_MESSAGE", message: "Uploading..." });
       console.log("Uploading file:", file);
-      const transactionId = await shareMemory({
-        data: file,
-        fileName: file.name,
-        condition: state.condition,
+      dispatch({ type: "UPDATE_MESSAGE", message: "Encrypting..." });
+      const { ciphertext, dataToEncryptHash } = await encryptFile({ file, condition: state.condition });
+      dispatch({ type: "UPDATE_MESSAGE", message: "Uploading..." });
+      const transactionId = await uploadFile({ ciphertext, dataToEncryptHash, condition: state.condition, originalFileName: file.name });
+      dispatch({ type: "UPDATE_MESSAGE", message: "Sharing..." });
+      await addMemoryMapping({
+        memoryId: transactionId,
         price: state.price,
         description: state.description,
       });
-      console.log("Upload result:", transactionId);
 
       if (!transactionId) {
         throw new Error("Upload result is empty");
       }
       onClose();
-      addToast({ color: "success", title: "Share successfully" });
-      onUploadFinished?.(transactionId);
       dispatch({ type: "UPLOAD_FINISHED" });
     } catch (error) {
       handleError(error, "upload memory");
@@ -223,7 +222,10 @@ const ShareMemoryButton: React.FC<UploadButtonProps> = ({ onUploadFinished, chil
               </ModalBody>
               <ModalFooter>
                 <span className="my-auto select-none">{state.statusMessage}</span>
-                <Button onPress={onClose} isDisabled={state.isUploading}>Cancel</Button>
+                <Button onPress={() => {
+                  onClose();
+                  dispatch({ type: "RESET" });
+                }} isDisabled={state.isUploading}>Cancel</Button>
                 <ButtonGroup>
                   <Button
                     color="primary"

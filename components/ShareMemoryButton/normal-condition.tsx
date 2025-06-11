@@ -1,7 +1,6 @@
 "use client";
-import { DEFAULT_CONDITION } from "@/utils/constants";
+import { DEFAULT_CONDITION, standardContractTypes } from "@/utils/constants";
 import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Input, Select, SelectItem } from "@heroui/react";
-import { properties } from "@lit-protocol/accs-schemas/schemas/LPACC_EVM_BASIC";
 import { AccsDefaultParams } from "@lit-protocol/types";
 import { ethers } from "ethers";
 import { Dispatch } from "react";
@@ -99,7 +98,7 @@ export default function NormalCondition({ condition, updateCondition }: {
       <Dropdown>
         <DropdownTrigger>
           <Button>
-            Use template
+            Use Template
           </Button>
         </DropdownTrigger>
         <DropdownMenu items={CONDITION_PRESETS}>
@@ -162,7 +161,7 @@ export default function NormalCondition({ condition, updateCondition }: {
           <Select label="Contract Type" onChange={(e) => {
             updateCondition({ ...condition, standardContractType: e.target.value as AccsDefaultParams["standardContractType"] });
           }} defaultSelectedKeys={[condition.standardContractType]} isVirtualized>
-            {properties.standardContractType.enum.map(type => (
+            {standardContractTypes.map(type => (
               <SelectItem key={type} textValue={type}>{type}</SelectItem>
             ))}
           </Select>

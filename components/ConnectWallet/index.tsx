@@ -3,7 +3,7 @@ import { useLitProtocol } from "@/contexts/litProtocolContext";
 import { useEthers } from "@/hooks/use-ethers";
 import { OrbButtonTiny } from "@/utils/styled";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 
 const WalletButtonContainer = styled.div`
@@ -44,13 +44,36 @@ const DropdownContainer = styled(motion.div)`
   margin-top: 10px;
 `;
 
+const ConnectWalletButton = () => {
+  const { connectStatus, currentAccount } = useEthers();
+
+  const comp = useMemo(() => {
+    switch (connectStatus) {
+      case "disconnected":
+        return <span>🔗 Connect Wallet</span>;
+      case "connecting":
+        return <span>🔄 Connecting...</span>;
+      case "connected":
+        return (
+          <>
+            <span className="hidden md:inline">{currentAccount}</span>
+            <span className="inline md:hidden">{currentAccount?.slice(0, 6)}...{currentAccount?.slice(-4)}</span>
+          </>
+        );
+      default:
+        return <span>🔗 Connect Wallet</span>;
+    }
+  }, [connectStatus, currentAccount]);
+
+  return comp;
+}
+
 export default function ConnectWallet() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { status: litProtocolStatus } = useLitProtocol();
   const {
     requireProvider,
     connectStatus,
-    currentAccount,
     disconnect: disconnectWallet,
   } = useEthers();
 
@@ -68,25 +91,26 @@ export default function ConnectWallet() {
     };
   }, []);
 
+  const handleTriggerClick = useCallback(async () => {
+    if (connectStatus === "disconnected") {
+      await requireProvider();
+      return;
+    } else if (connectStatus === "connected") {
+      setIsDropdownOpen((prev) => !prev);
+      return;
+    }
+  }, [connectStatus, requireProvider]);
+
+  const handleDisconnect = useCallback(async () => {
+    disconnectWallet();
+    setIsDropdownOpen(false);
+  }, [disconnectWallet]);
+
   return (
     <WalletButtonContainer id="connect-wallet">
       <WalletButton>
-        <WalletButtonTrigger
-          className="font-geist-mono"
-          onClick={async () => {
-            if (connectStatus === "disconnected") {
-              await requireProvider();
-              return;
-            } else if (connectStatus === "connected") {
-              setIsDropdownOpen(!isDropdownOpen);
-              return;
-            }
-          }}
-        >
-          {
-            connectStatus === "connected" ? currentAccount :
-              connectStatus === "connecting" ? "🔄 Connecting..." : "🔗 Connect Wallet"
-          }
+        <WalletButtonTrigger className="font-geist-mono" onClick={handleTriggerClick}>
+          <ConnectWalletButton />
         </WalletButtonTrigger>
         <AnimatePresence>
           {isDropdownOpen && connectStatus === "connected" && (
@@ -96,16 +120,18 @@ export default function ConnectWallet() {
               exit={{ opacity: 0, y: -10 }}
             >
               <div className="flex flex-col gap-2 font-inter">
-                <div>
-                  <span>Lit Client:</span>
-                  <span>{litProtocolStatus}</span>
+                <div className="flex gap-1">
+                  <span>Lit Protocol:</span>
+                  <span>{litProtocolStatus === "connected" ? "Connected" : "Not Connected"}</span>
                 </div>
-                <OrbButtonTiny $noGlow onClick={disconnectWallet}>Disconnect Wallet</OrbButtonTiny>
+                <OrbButtonTiny $noGlow onClick={handleDisconnect}>
+                  Disconnect Wallet
+                </OrbButtonTiny>
               </div>
             </DropdownContainer>
           )}
         </AnimatePresence>
       </WalletButton>
-    </WalletButtonContainer>
+    </WalletButtonContainer >
   );
 };

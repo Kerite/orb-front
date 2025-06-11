@@ -30,11 +30,6 @@ const ChatArea = styled.div`
   scrollbar-color: #00000040 #0000;
 `
 
-const Message = styled.p`
-  font-size: 0.95rem;
-  color: var(--text-color);
-`
-
 const blinkAnimation = keyframes`
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -83,16 +78,19 @@ export default function ChatBox() {
 
   return (
     <DialogBox className="flex flex-col gap-2">
-      <ChatArea>
+      <ChatArea className="text-medium text-normal">
         {records.map((record, index) => (
-          <Message key={index}>
-            <strong>{record.role === "user" ? "User" : "AI"}:</strong> {record.content}
-          </Message>
+          <p key={index}>
+            <strong>{record.role === "user" ? "User" : "AI"}:&nbsp;</strong>
+            <span>{record.content}</span>
+          </p>
         ))}
         {isChating && (
-          <Message>
-            <strong>AI:</strong> {reply.content}<Cursor />
-          </Message>
+          <p>
+            <strong>AI:&nbsp;</strong>
+            <span>{reply.content}</span>
+            <Cursor />
+          </p>
         )}
         <div ref={messageEndRef}></div>
       </ChatArea>

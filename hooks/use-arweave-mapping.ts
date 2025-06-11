@@ -1,5 +1,5 @@
 "use client";
-import { abi as MemoryMappingAbi } from "@/artifacts/contracts/MemoryMapping.sol/MemoryMapping.json";
+import MemoryMapping from "@/artifacts/contracts/MemoryMapping.sol/MemoryMapping.json";
 import { useEthers } from "@/hooks/use-ethers";
 import { BigNumber, ethers } from "ethers";
 import { useCallback, useState } from "react";
@@ -11,10 +11,10 @@ export interface ArweaveMappingValue {
   description: string;
 }
 
-export const useArweaveMapping = () => {
+export const useMemoryMappingContract = () => {
   const { requireProvider, requireNetwork } = useEthers();
   const [bscProvider] = useState(() => new ethers.providers.JsonRpcProvider("https://broken-evocative-surf.bsc-testnet.quiknode.pro/11f750973f8f44ad331023073451c2eaee951114/"));
-  const [memoryMappingContract] = useState(() => new ethers.Contract(process.env.NEXT_PUBLIC_ARWEAVE_MAPPING_CONTRACT!, MemoryMappingAbi, bscProvider));
+  const [memoryMappingContract] = useState(() => new ethers.Contract(process.env.NEXT_PUBLIC_ARWEAVE_MAPPING_CONTRACT!, MemoryMapping.abi, bscProvider));
 
   const getLatestMemories = useCallback(async (): Promise<ArweaveMappingValue[]> => {
     if (!memoryMappingContract) return [];
