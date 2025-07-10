@@ -14,7 +14,9 @@ export default function MemoryList({ title, address }: Readonly<{ title?: string
     setLoading(true);
     if (!address) {
       getLatestMemories()
-        .then(data => setMemoryList(data))
+        .then(data => setMemoryList(data.filter(d => {
+          return d.description !== ""
+        }).slice(-10).reverse()))
         .catch((error) => addToast({ title: "Load memory list failed", description: `${error}`, color: "danger" }))
         .finally(() => setLoading(false));
     } else {
