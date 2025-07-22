@@ -1,4 +1,5 @@
 import { ChatRecord } from "@/types";
+import { errorFunction } from "@/utils/constants";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
@@ -16,13 +17,15 @@ const FingerPrintContext = createContext<{
   sendMessage: (params: Readonly<SendMessageParams>) => Promise<void>;
   exportMemory: () => Promise<Blob>;
   importMemory: (file: File) => Promise<void>;
+  clearMemory: () => Promise<void>;
 }>({
   fingerprint: "",
   records: [],
   isChating: false,
-  sendMessage: async () => { throw new Error("Not implemented"); },
-  exportMemory: async () => { throw new Error("Not implemented"); },
-  importMemory: async () => { throw new Error("Not implemented"); },
+  sendMessage: errorFunction,
+  exportMemory: errorFunction,
+  importMemory: errorFunction,
+  clearMemory: errorFunction,
 });
 
 export const ChatProvider = ({
@@ -195,14 +198,40 @@ export const ChatProvider = ({
     }
   }, [fingerprint]);
 
+  const clearMemory = useCallback(async () => {
+    try {
+      console.log("Clearing Memory for user", fingerprint);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/del-memory`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        body: JSON.stringify({
+          "user_id": fingerprint
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Import failed:", errorText);
+        throw new Error(`Import failed: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Clear Memory failed", error);
+      throw error;
+    }
+  }, [fingerprint]);
+
   const contextValue = useMemo(() => ({
     fingerprint,
     records,
     isChating,
     sendMessage,
     exportMemory,
-    importMemory
-  }), [fingerprint, records, isChating, sendMessage, exportMemory, importMemory]);
+    importMemory,
+    clearMemory
+  }), [fingerprint, records, isChating, sendMessage, exportMemory, importMemory, clearMemory]);
 
   return (
     <FingerPrintContext.Provider value={contextValue}>
